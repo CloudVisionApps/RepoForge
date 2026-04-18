@@ -15,6 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.4.2] - 2026-04-18
+
+### Changed
+
+- **Packaging**: first install now writes `/etc/repoforge.env` with an auto-generated `REPOFORGE_TOKEN` (64 hex chars from `openssl rand -hex 32`, or SHA-256 of random bytes if OpenSSL is missing) instead of a commented placeholder.
+
+### Fixed
+
+- **Web UI**: upload form called `reset()` on a React event after `await`, so `currentTarget` was null — capture the `<form>` before awaiting.
+- **Web UI**: “Open index URL” for RPM repos no longer points at a fake `your-package.rpm`; it uses `rpms/repodata/repomd.xml`. File repos link to the first uploaded artifact when available.
+
 ## [0.4.1] - 2026-04-18
 
 ### Changed

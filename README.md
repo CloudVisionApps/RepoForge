@@ -4,7 +4,7 @@ Small Go service that stores uploaded artifacts on disk, tracks metadata in **SQ
 
 ## Version
 
-The current release is **0.4.1**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
+The current release is **0.4.2**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ The current release is **0.4.1**. See [CHANGELOG.md](CHANGELOG.md) for release h
 | `LISTEN` | `:8080` | HTTP listen address |
 | `DATA_DIR` | `./data` | Filesystem root for repository payloads |
 | `DB_PATH` | `./repoforge.db` | SQLite database file |
-| `REPOFORGE_TOKEN` | _(empty)_ | If set, required as `Authorization: Bearer …` for all `/v1/*` routes |
+| `REPOFORGE_TOKEN` | _(empty)_ | If set, required as `Authorization: Bearer …` for all `/v1/*` routes. **`.deb` / `.rpm` first install** creates `/etc/repoforge.env` with a random hex token (via `openssl` or `sha256sum`+`dd`) unless neither is available. |
 | `CREATEREPO_C_PATH` | `createrepo_c` | Binary used for RPM metadata |
 | `MAX_UPLOAD_BYTES` | `536870912` | Max upload size (bytes) |
 
@@ -143,10 +143,10 @@ gpgcheck=0
 On **Linux** with Go, **Node.js 20+**, `npm`, [FPM](https://github.com/jordansissel/fpm), and **`rpmbuild`** on `PATH` (Debian/Ubuntu: `apt install rpm`):
 
 ```bash
-VERSION=0.4.1 ./packaging/build-packages.sh
+VERSION=0.4.2 ./packaging/build-packages.sh
 ```
 
-Artifacts appear under `packaging/out/`. The systemd unit is `repoforge.service`; state defaults to `/var/lib/repoforge` with optional overrides in `/etc/repoforge.env` (see `packaging/repoforge.service`).
+Artifacts appear under `packaging/out/`. The systemd unit is `repoforge.service`; state defaults to `/var/lib/repoforge` with optional overrides in `/etc/repoforge.env` (see `packaging/repoforge.service`). On first package install, maintainer scripts create `/etc/repoforge.env` with an auto-generated `REPOFORGE_TOKEN` when `openssl` or `sha256sum`+`dd` is available; copy the value into the web UI token field or API clients, or comment that line out for an open `/v1` (development only).
 
 ## Layout on disk
 

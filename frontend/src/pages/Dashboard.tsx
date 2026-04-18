@@ -148,7 +148,8 @@ export function Dashboard() {
 
   const handleUpload = async (repo: Repository, event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const formData = new FormData(event.currentTarget)
+    const formEl = event.currentTarget
+    const formData = new FormData(formEl)
     const file = formData.get('file')
     const path = formData.get('path')
 
@@ -169,7 +170,7 @@ export function Dashboard() {
         [repo.slug]: [response.artifact, ...(current[repo.slug] ?? [])],
       }))
       setPathByRepo((current) => ({ ...current, [repo.slug]: '' }))
-      event.currentTarget.reset()
+      formEl.reset()
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Upload failed')
     } finally {
@@ -177,13 +178,17 @@ export function Dashboard() {
     }
   }
 
-  const examplePath = (repo: Repository): string => {
+  const publicIndexUrl = (repo: Repository, artifacts: Artifact[]): string => {
     const base = api.repoBaseUrl(repo)
     if (repo.type === 'rpm') {
-      return `${base}/rpms/your-package.rpm`
+      return `${base}/rpms/repodata/repomd.xml`
     }
     if (repo.type === 'file') {
-      return `${base}/files/notes/readme.txt`
+      const first = artifacts[0]
+      if (first) {
+        return `${base}/${first.logical_path}`
+      }
+      return `${base}/files/`
     }
     const codename = typeof repo.config.codename === 'string' ? repo.config.codename : 'stable'
     const component = typeof repo.config.component === 'string' ? repo.config.component : 'main'
@@ -267,7 +272,7 @@ export function Dashboard() {
                         </p>
                       </div>
                       <a
-                        href={examplePath(repo)}
+                        href={publicIndexUrl(repo, artifacts)}
                         target="_blank"
                         rel="noreferrer"
                         className="shrink-0 rounded-md border border-rf-border px-3 py-1.5 text-xs font-medium text-rf-accent hover:bg-rf-surface"

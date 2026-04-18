@@ -7,3 +7,5 @@ repoforge.db-*
 frontend/node_modules/
 packaging/staging/
 packaging/out/
+/repoforge-*.rpm
+/repoforge-*.deb
