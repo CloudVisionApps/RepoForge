@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -25,8 +26,7 @@ func TestServeRepoRepodataDirectoryRedirectsToRepomd(t *testing.T) {
 	t.Cleanup(func() { _ = sqlDB.Close() })
 
 	store := db.NewStore(sqlDB)
-	ctx := t.Context()
-	if _, err := store.CreateRepository(ctx, "Prod", "production", db.RepoRpm, nil); err != nil {
+	if _, err := store.CreateRepository(context.Background(), "Prod", "production", db.RepoRpm, nil); err != nil {
 		t.Fatal(err)
 	}
 

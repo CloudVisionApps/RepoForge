@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Tests**: `static_test.go` no longer uses `testing.T.Context()` (Go 1.21+) so CI on older toolchains compiles.
+
 ### Removed
 
 ## [0.4.3] - 2026-04-18
