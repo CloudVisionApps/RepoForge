@@ -15,6 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.3.0] - 2026-04-18
+
+### Added
+
+- **Web UI** (`frontend/`): Vite + React dashboard for repositories, uploads, health, and host tooling install; production assets embedded under `GET /{path}` (SPA) from `internal/httpapi/webui/dist`.
+- `GET /v1/repositories/{slug}/artifacts` — list artifacts for a repository (JSON).
+
+### Changed
+
+- FPM **packaging** and **GitHub Actions** again run `npm ci` / `npm run build` before `go build` so binaries include the UI.
+
+### Fixed
+
+- Dashboard artifact download link used a broken `href` expression.
+
 ## [0.2.0] - 2026-04-18
 
 ### Added

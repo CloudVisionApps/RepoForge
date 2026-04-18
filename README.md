@@ -1,14 +1,15 @@
 # repoforge
 
-Small Go service that stores uploaded artifacts on disk, tracks metadata in **SQLite**, exposes a **REST API**, and rebuilds **APT** and **RPM** repository indexes so clients can consume repositories over plain HTTP.
+Small Go service that stores uploaded artifacts on disk, tracks metadata in **SQLite**, exposes a **REST API** and a **web UI**, and rebuilds **APT** and **RPM** repository indexes so clients can consume repositories over plain HTTP.
 
 ## Version
 
-The current release is **0.2.0**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
+The current release is **0.3.0**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
 ## Requirements
 
 - Go 1.22+
+- **Node.js 20+** and **npm** only if you build the UI from source (see **Run**).
 - For **RPM** repositories: `createrepo_c` on `PATH` (or set `CREATEREPO_C_PATH`). Used after each `.rpm` upload.
 - For **DEB** repositories: no external indexer is required; `.deb` metadata is parsed in-process and `Packages` / `Release` files are generated under `dists/`.
 
@@ -25,9 +26,14 @@ The current release is **0.2.0**. See [CHANGELOG.md](CHANGELOG.md) for release h
 
 ## Run
 
+Build the embedded UI (outputs to `internal/httpapi/webui/dist/`), then start the server:
+
 ```bash
+( cd frontend && npm ci && npm run build )
 go run ./cmd/repoforge
 ```
+
+Open **http://127.0.0.1:8080/** for the dashboard (create repos, upload packages, optional host tooling install). `npm run dev` in `frontend/` proxies API calls to `VITE_DEV_API_URL` (default `http://127.0.0.1:8080`).
 
 Health:
 
@@ -57,6 +63,7 @@ List and inspect:
 ```bash
 curl -sS localhost:8080/v1/repositories
 curl -sS localhost:8080/v1/repositories/deb-demo
+curl -sS localhost:8080/v1/repositories/deb-demo/artifacts
 ```
 
 Upload (multipart field **`file`**; optional **`path`** for `file` repos):
@@ -136,7 +143,7 @@ gpgcheck=0
 On a machine with [FPM](https://github.com/jordansissel/fpm) and `rpm` installed:
 
 ```bash
-VERSION=0.2.0 ./packaging/build-packages.sh
+VERSION=0.3.0 ./packaging/build-packages.sh
 ```
 
 Artifacts appear under `packaging/out/`. The systemd unit is `repoforge.service`; state defaults to `/var/lib/repoforge` with optional overrides in `/etc/repoforge.env` (see `packaging/repoforge.service`).

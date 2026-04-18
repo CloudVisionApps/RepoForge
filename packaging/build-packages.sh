@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build .deb and .rpm using FPM (https://github.com/jordansissel/fpm).
-# Requires: go, fpm (gem install fpm), rpmbuild (e.g. apt install rpm on Debian/Ubuntu).
+# Requires: go, Node 20+, npm, fpm (gem install fpm), rpmbuild (e.g. apt install rpm on Debian/Ubuntu).
 # Pure Go build (modernc.org/sqlite); set GOARCH for cross-compilation on a capable host.
 set -euo pipefail
 
@@ -42,6 +42,13 @@ esac
 rm -rf "$STAGING"
 mkdir -p "$STAGING/usr/bin" "$STAGING/usr/lib/systemd/system" \
 	"$STAGING/usr/share/doc/${PKG_NAME}" "$OUT"
+
+echo "Building web UI (Vite)..."
+(
+	cd "$ROOT/frontend"
+	npm ci
+	npm run build
+)
 
 echo "Building ${GOOS}/${GOARCH} binary..."
 (

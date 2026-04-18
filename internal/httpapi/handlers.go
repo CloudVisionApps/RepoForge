@@ -121,6 +121,28 @@ func (a *API) getRepository(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, repoJSON(repo))
 }
 
+func (a *API) listArtifacts(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	if _, err := a.store.GetRepositoryBySlug(r.Context(), slug); err != nil {
+		if err == db.ErrNotFound {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, `{"error":"database"}`, http.StatusInternalServerError)
+		return
+	}
+	list, err := a.store.ListArtifactsByRepositorySlug(r.Context(), slug)
+	if err != nil {
+		http.Error(w, `{"error":"database"}`, http.StatusInternalServerError)
+		return
+	}
+	out := make([]any, 0, len(list))
+	for _, x := range list {
+		out = append(out, artifactJSON(x))
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"artifacts": out})
+}
+
 func (a *API) postUpload(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	repo, err := a.store.GetRepositoryBySlug(r.Context(), slug)

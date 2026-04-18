@@ -19,9 +19,6 @@ func New(cfg config.Config, store *db.Store, fs *storage.FS, indexers *repoindex
 		_, _ = w.Write([]byte("ok\n"))
 	})
 	r.Get("/readyz", a.readyz)
-	r.Route("/repo", func(r chi.Router) {
-		r.Get("/{slug}/{path:*}", a.serveRepoFile)
-	})
 	r.Route("/v1", func(r chi.Router) {
 		if stringsNotEmpty(cfg.BearerToken) {
 			r.Use(bearerAuth(cfg.BearerToken))
@@ -29,9 +26,17 @@ func New(cfg config.Config, store *db.Store, fs *storage.FS, indexers *repoindex
 		r.Post("/repositories", a.postRepository)
 		r.Get("/repositories", a.listRepositories)
 		r.Get("/repositories/{slug}", a.getRepository)
+		r.Get("/repositories/{slug}/artifacts", a.listArtifacts)
 		r.Post("/repositories/{slug}/uploads", a.postUpload)
 		r.Post("/system/install-repo-tooling", a.postInstallRepoTooling)
+		r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+			writeJSON(w, http.StatusNotFound, map[string]any{"error": "not found"})
+		})
 	})
+	r.Route("/repo", func(r chi.Router) {
+		r.Get("/{slug}/{path:*}", a.serveRepoFile)
+	})
+	r.Get("/{path:*}", a.serveWebUI)
 	return r
 }
 

@@ -39,7 +39,9 @@ func (a *API) postInstallRepoTooling(w http.ResponseWriter, r *http.Request) {
 	distro, log, err := sysrepo.InstallRepoTooling(r.Context())
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]any{
+			"ok":     false,
 			"error":  err.Error(),
+			"detail": err.Error(),
 			"distro": distro,
 			"log":    log,
 		})

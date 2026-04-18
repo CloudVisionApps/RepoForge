@@ -302,7 +302,7 @@ export function Dashboard() {
                                 <p className="text-xs text-slate-500">{formatBytes(artifact.size)} • {new Date(artifact.created_at).toLocaleString()}</p>
                               </div>
                               <a
-                                href={`${api.repoBaseUrl(repo)}/${artifact.logical_path}`.replace(`/${repo.slug}/`, `/${repo.slug}/`)}
+                                href={`${api.repoBaseUrl(repo)}/${artifact.logical_path}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="text-sm font-medium text-blue-700 hover:text-blue-900"

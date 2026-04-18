@@ -91,6 +91,29 @@ func (s *Store) ListRepositories(ctx context.Context) ([]Repository, error) {
 	return out, rows.Err()
 }
 
+func (s *Store) ListArtifactsByRepositorySlug(ctx context.Context, slug string) ([]Artifact, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT a.id, a.repository_id, a.logical_path, a.sha256, a.size, a.content_type, a.created_at
+		FROM artifacts a
+		INNER JOIN repositories r ON r.id = a.repository_id
+		WHERE r.slug = ?
+		ORDER BY a.id DESC
+	`, slug)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Artifact
+	for rows.Next() {
+		var a Artifact
+		if err := rows.Scan(&a.ID, &a.RepositoryID, &a.LogicalPath, &a.SHA256, &a.Size, &a.ContentType, &a.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, a)
+	}
+	return out, rows.Err()
+}
+
 func (s *Store) CreateArtifact(ctx context.Context, repoID int64, logicalPath, sha256, contentType string, size int64) (Artifact, error) {
 	res, err := s.db.ExecContext(ctx,
 		`INSERT INTO artifacts (repository_id, logical_path, sha256, size, content_type) VALUES (?, ?, ?, ?, ?)`,

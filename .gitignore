@@ -3,6 +3,7 @@ repoforge.db
 repoforge.db-*
 /data/
 *.test
-dist/
+/dist/
+frontend/node_modules/
 packaging/staging/
 packaging/out/
