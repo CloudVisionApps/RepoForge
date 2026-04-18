@@ -10,7 +10,7 @@ Web dashboard (repositories, uploads, health, bearer token):
 
 ## Version
 
-The current release is **0.4.2**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
+The current release is **0.4.3**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
 ## Documentation
 

@@ -36,7 +36,7 @@ Open **http://127.0.0.1:8080/** for the dashboard (create repos, upload packages
 On **Linux** with Go, **Node.js 20+**, `npm`, [FPM](https://github.com/jordansissel/fpm), and **`rpmbuild`** on `PATH` (Debian/Ubuntu: `apt install rpm`):
 
 ```bash
-VERSION=0.4.2 ./packaging/build-packages.sh
+VERSION=0.4.3 ./packaging/build-packages.sh
 ```
 
 Artifacts appear under `packaging/out/`. See [CONFIGURATION.md](CONFIGURATION.md) for systemd paths and `/etc/repoforge.env`.

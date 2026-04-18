@@ -11,13 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+### Fixed
+
+### Removed
+
+## [0.4.3] - 2026-04-18
+
+### Changed
+
 - **Docs**: development, packaging-from-source, and configuration content moved from README to [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) and [docs/CONFIGURATION.md](docs/CONFIGURATION.md); packages ship these under `/usr/share/doc/repoforge/`.
+- **Docs**: REST `curl` examples live in [docs/REST.md](docs/REST.md); README links to it and packages install it as `/usr/share/doc/repoforge/REST.md`.
 
 ### Fixed
 
 - **HTTP**: `GET /repo/{slug}/…/repodata/` (directory URL) now redirects to `repomd.xml` when that file exists, instead of always returning 404 for directories.
-
-### Removed
 
 ## [0.4.2] - 2026-04-18
 
