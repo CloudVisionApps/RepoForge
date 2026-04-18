@@ -27,6 +27,11 @@ const defaultForm: RepoFormState = {
   architectures: 'amd64',
 }
 
+const inputClass =
+  'w-full rounded-md border border-rf-border bg-rf-surface px-3 py-2 text-sm text-rf-fg outline-none placeholder:text-rf-muted focus:border-rf-accent/40 focus:ring-1 focus:ring-rf-accent/30'
+
+const labelClass = 'text-xs font-medium uppercase tracking-wider text-rf-muted'
+
 export function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -188,150 +193,185 @@ export function Dashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <StatCard title="Health" value={health.ok ? 'ok' : 'down'} tone={health.ok ? 'emerald' : 'rose'} />
-        <StatCard title="Readiness" value={ready.ok ? 'ready' : 'waiting'} tone={ready.ok ? 'emerald' : 'amber'} />
-        <StatCard title="Repositories" value={String(repositories.length)} tone="blue" />
-        <StatCard title="RPM / DEB" value={`${stats.rpm} / ${stats.deb}`} tone="violet" />
-        <StatCard title="File repos" value={String(stats.file)} tone="slate" />
-      </section>
+    <div className="mx-auto max-w-6xl space-y-10">
+      <header className="flex flex-col gap-6 border-b border-rf-border pb-8 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="font-mono text-xs text-rf-accent">/v1/repositories</p>
+          <h2 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Repositories</h2>
+          <p className="mt-2 max-w-xl text-sm text-rf-muted">
+            Health checks, creation, uploads, and host tooling — same API the UI calls.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusChip label="Process" ok={health.ok} detail={health.message} />
+          <StatusChip label="SQLite" ok={ready.ok} detail={ready.message} />
+          <span className="hidden h-6 w-px bg-rf-border sm:block" aria-hidden />
+          <span className="rounded-full border border-rf-border bg-rf-elevated px-3 py-1 font-mono text-xs text-rf-muted">
+            {repositories.length} repos
+          </span>
+          <span className="rounded-full border border-rf-border bg-rf-elevated px-3 py-1 font-mono text-xs text-rf-muted">
+            rpm {stats.rpm} · deb {stats.deb} · file {stats.file}
+          </span>
+          <button
+            type="button"
+            onClick={() => void loadData()}
+            className="rounded-full border border-rf-border px-4 py-1.5 text-sm font-medium text-rf-fg hover:border-rf-accent/50 hover:text-rf-accent"
+          >
+            Reload
+          </button>
+        </div>
+      </header>
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div
+          role="alert"
+          className="border-l-4 border-rf-danger bg-rf-elevated px-4 py-3 text-sm text-rf-fg"
+        >
           {error}
         </div>
       )}
 
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold">Repositories</h2>
-              <p className="text-sm text-slate-600">Create, inspect, and upload packages.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => void loadData()}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-            >
-              Refresh
-            </button>
+      <div className="grid gap-10 xl:grid-cols-[1fr_min(380px,100%)]">
+        <section className="space-y-5">
+          <div className="flex items-baseline justify-between gap-4">
+            <h3 className="text-lg font-semibold">Published trees</h3>
+            {loading && <span className="text-sm text-rf-muted">Loading…</span>}
           </div>
 
-          {loading ? (
-            <p className="text-sm text-slate-500">Loading repositories…</p>
-          ) : repositories.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
-              No repositories yet. Create the first one using the form.
+          {!loading && repositories.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-rf-border bg-rf-surface/50 px-6 py-12 text-center">
+              <p className="text-sm text-rf-muted">No repositories yet.</p>
+              <p className="mt-2 text-xs text-rf-muted">Create one in the panel on the right.</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <ul className="space-y-5">
               {repositories.map((repo) => {
                 const artifacts = artifactsByRepo[repo.slug] ?? []
+                const accent = repoAccent(repo.type)
                 return (
-                  <article key={repo.id} className="rounded-xl border border-slate-200 p-4">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                      <div>
+                  <li
+                    key={repo.id}
+                    className={`overflow-hidden rounded-xl border border-rf-border bg-rf-elevated/80 shadow-[0_0_0_1px_rgba(0,0,0,0.25)] backdrop-blur-sm ${accent}`}
+                  >
+                    <div className="flex flex-col gap-4 border-b border-rf-border/80 p-5 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-lg font-semibold text-slate-900">{repo.name}</h3>
-                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase text-slate-700">
-                            {repo.type}
-                          </span>
+                          <h4 className="text-lg font-semibold">{repo.name}</h4>
+                          <TypeBadge type={repo.type} />
                         </div>
-                        <p className="mt-1 text-sm text-slate-600">Slug: {repo.slug}</p>
-                        <p className="text-xs text-slate-500">Created: {new Date(repo.created_at).toLocaleString()}</p>
+                        <p className="font-mono text-xs text-rf-muted">
+                          slug <span className="text-rf-fg">{repo.slug}</span>
+                        </p>
+                        <p className="text-xs text-rf-muted">
+                          created {new Date(repo.created_at).toLocaleString()}
+                        </p>
                       </div>
                       <a
                         href={examplePath(repo)}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-sm font-medium text-blue-700 hover:text-blue-900"
+                        className="shrink-0 rounded-md border border-rf-border px-3 py-1.5 text-xs font-medium text-rf-accent hover:bg-rf-surface"
                       >
-                        Open public path →
+                        Open index URL
                       </a>
                     </div>
 
                     {repo.type === 'deb' && (
-                      <div className="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
-                        Codename: {String(repo.config.codename ?? 'stable')} • Component: {String(repo.config.component ?? 'main')} • Architectures:{' '}
+                      <div className="border-b border-rf-border/80 bg-rf-surface/40 px-5 py-3 font-mono text-xs text-rf-muted">
+                        <span className="text-rf-fg">{String(repo.config.codename ?? 'stable')}</span>
+                        {' / '}
+                        <span className="text-rf-fg">{String(repo.config.component ?? 'main')}</span>
+                        {' · '}
                         {Array.isArray(repo.config.architectures)
                           ? repo.config.architectures.join(', ')
                           : 'amd64'}
                       </div>
                     )}
 
-                    <form onSubmit={(event) => void handleUpload(repo, event)} className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-                      <input
-                        name="file"
-                        type="file"
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                        required
-                      />
-                      <input
-                        name="path"
-                        value={pathByRepo[repo.slug] ?? ''}
-                        onChange={(event) =>
-                          setPathByRepo((current) => ({ ...current, [repo.slug]: event.target.value }))
-                        }
-                        placeholder={repo.type === 'file' ? 'Optional path inside files repo' : 'Optional override path'}
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                      />
+                    <form
+                      onSubmit={(event) => void handleUpload(repo, event)}
+                      className="grid gap-3 border-b border-rf-border/80 p-5 md:grid-cols-[1fr_1fr_auto] md:items-end"
+                    >
+                      <label className={`block space-y-1.5 ${labelClass}`}>
+                        <span>Package or file</span>
+                        <input
+                          name="file"
+                          type="file"
+                          required
+                          className={`${inputClass} file:mr-3 file:rounded file:border-0 file:bg-rf-border file:px-2 file:py-1 file:text-xs file:text-rf-fg`}
+                        />
+                      </label>
+                      <label className={`block space-y-1.5 ${labelClass}`}>
+                        <span>Path override</span>
+                        <input
+                          name="path"
+                          value={pathByRepo[repo.slug] ?? ''}
+                          onChange={(event) =>
+                            setPathByRepo((current) => ({ ...current, [repo.slug]: event.target.value }))
+                          }
+                          placeholder={
+                            repo.type === 'file' ? 'files/…' : 'optional'
+                          }
+                          className={inputClass}
+                        />
+                      </label>
                       <button
                         type="submit"
                         disabled={uploadingSlug === repo.slug}
-                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="h-10 rounded-md bg-rf-accent px-4 text-sm font-semibold text-rf-void hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {uploadingSlug === repo.slug ? 'Uploading…' : 'Upload'}
                       </button>
                     </form>
 
-                    <div className="mt-4">
-                      <p className="mb-2 text-sm font-semibold text-slate-800">Recent artifacts</p>
+                    <div className="p-5">
+                      <p className={`${labelClass} mb-3`}>Recent artifacts</p>
                       {artifacts.length === 0 ? (
-                        <p className="text-sm text-slate-500">No uploads recorded yet.</p>
+                        <p className="text-sm text-rf-muted">Nothing uploaded yet.</p>
                       ) : (
-                        <div className="space-y-2">
+                        <ul className="divide-y divide-rf-border/60 rounded-lg border border-rf-border bg-rf-surface/40">
                           {artifacts.slice(0, 5).map((artifact) => (
-                            <div
+                            <li
                               key={artifact.id}
-                              className="flex flex-col justify-between gap-1 rounded-lg bg-slate-50 px-3 py-2 text-sm md:flex-row md:items-center"
+                              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                             >
-                              <div>
-                                <p className="font-medium text-slate-800">{artifact.logical_path}</p>
-                                <p className="text-xs text-slate-500">{formatBytes(artifact.size)} • {new Date(artifact.created_at).toLocaleString()}</p>
+                              <div className="min-w-0">
+                                <p className="truncate font-mono text-sm text-rf-fg">{artifact.logical_path}</p>
+                                <p className="mt-0.5 text-xs text-rf-muted">
+                                  {formatBytes(artifact.size)} · {new Date(artifact.created_at).toLocaleString()}
+                                </p>
                               </div>
                               <a
                                 href={`${api.repoBaseUrl(repo)}/${artifact.logical_path}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-sm font-medium text-blue-700 hover:text-blue-900"
+                                className="shrink-0 text-xs font-medium text-rf-accent hover:underline"
                               >
-                                Download
+                                GET
                               </a>
-                            </div>
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       )}
                     </div>
-                  </article>
+                  </li>
                 )
               })}
-            </div>
+            </ul>
           )}
-        </div>
+        </section>
 
-        <div className="space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold">Create repository</h2>
-            <p className="mt-1 text-sm text-slate-600">Use lowercase slugs such as rpm-demo or docs-files.</p>
+        <aside className="space-y-6">
+          <div className="rounded-xl border border-rf-border bg-rf-elevated/90 p-6">
+            <h3 className="text-lg font-semibold">New repository</h3>
+            <p className="mt-1 text-sm text-rf-muted">Lowercase slug; letters, digits, hyphen.</p>
 
-            <form onSubmit={(event) => void handleCreateRepository(event)} className="mt-4 space-y-3">
+            <form onSubmit={(event) => void handleCreateRepository(event)} className="mt-5 space-y-4">
               <Field label="Name">
                 <input
                   value={form.name}
                   onChange={(event) => updateForm('name', event.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  className={inputClass}
                   placeholder="Production RPMs"
                   required
                 />
@@ -340,8 +380,10 @@ export function Dashboard() {
               <Field label="Slug">
                 <input
                   value={form.slug}
-                  onChange={(event) => updateForm('slug', event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  onChange={(event) =>
+                    updateForm('slug', event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))
+                  }
+                  className={`${inputClass} font-mono`}
                   placeholder="production-rpms"
                   required
                 />
@@ -351,28 +393,28 @@ export function Dashboard() {
                 <select
                   value={form.type}
                   onChange={(event) => updateForm('type', event.target.value as RepoType)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  className={inputClass}
                 >
-                  <option value="rpm">RPM</option>
-                  <option value="deb">DEB</option>
-                  <option value="file">File</option>
+                  <option value="rpm">RPM (DNF/YUM)</option>
+                  <option value="deb">DEB (APT)</option>
+                  <option value="file">Static files</option>
                 </select>
               </Field>
 
               {form.type === 'deb' && (
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className="grid gap-4 rounded-lg border border-rf-border bg-rf-surface/50 p-4 md:grid-cols-2">
                   <Field label="Codename">
                     <input
                       value={form.codename}
                       onChange={(event) => updateForm('codename', event.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      className={`${inputClass} font-mono`}
                     />
                   </Field>
                   <Field label="Component">
                     <input
                       value={form.component}
                       onChange={(event) => updateForm('component', event.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      className={`${inputClass} font-mono`}
                     />
                   </Field>
                   <div className="md:col-span-2">
@@ -380,7 +422,7 @@ export function Dashboard() {
                       <input
                         value={form.architectures}
                         onChange={(event) => updateForm('architectures', event.target.value)}
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                        className={`${inputClass} font-mono`}
                         placeholder="amd64, arm64"
                       />
                     </Field>
@@ -391,69 +433,99 @@ export function Dashboard() {
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-md border border-rf-accent/40 bg-rf-accent/10 py-2.5 text-sm font-semibold text-rf-accent hover:bg-rf-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {creating ? 'Creating…' : 'Create repository'}
               </button>
             </form>
-          </section>
+          </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold">Host tooling</h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Install RPM and related repo tooling directly from the UI when the service is authorized and running as root.
+          <div className="rounded-xl border border-rf-border bg-rf-elevated/90 p-6">
+            <h3 className="text-lg font-semibold">Host packages</h3>
+            <p className="mt-2 text-sm leading-relaxed text-rf-muted">
+              Installs createrepo_c (and related) plus optional Debian tooling when the API token is set and the process runs as root.
             </p>
             <button
               type="button"
               onClick={() => void handleInstallTooling()}
               disabled={installing}
-              className="mt-4 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-4 w-full rounded-md border border-rf-warn/40 bg-rf-warn/10 py-2.5 text-sm font-semibold text-rf-warn hover:bg-rf-warn/15 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {installing ? 'Installing…' : 'Install repo tooling'}
+              {installing ? 'Running installer…' : 'Install repo tooling'}
             </button>
             {toolingResult && (
-              <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
-                <p className="font-semibold text-slate-900">
-                  {toolingResult.ok ? 'Installation completed' : 'Installation response'}
+              <div className="mt-4 space-y-2 rounded-lg border border-rf-border bg-rf-surface/50 p-4 text-sm text-rf-muted">
+                <p className="font-medium text-rf-fg">
+                  {toolingResult.ok ? 'Finished' : 'Response'}
                 </p>
-                {toolingResult.distro && <p>Distro: {toolingResult.distro}</p>}
+                {toolingResult.distro && (
+                  <p>
+                    Distro: <span className="font-mono text-rf-fg">{toolingResult.distro}</span>
+                  </p>
+                )}
                 {toolingResult.detail && <p>{toolingResult.detail}</p>}
-                {toolingResult.error && <p className="text-rose-700">{toolingResult.error}</p>}
-                {toolingResult.log && <pre className="mt-2 rounded-lg bg-white p-3 text-xs">{toolingResult.log}</pre>}
+                {toolingResult.error && <p className="text-rf-danger">{toolingResult.error}</p>}
+                {toolingResult.log && (
+                  <pre className="max-h-48 overflow-auto rounded-md border border-rf-border bg-rf-void p-3 font-mono text-xs text-rf-fg/90">
+                    {toolingResult.log}
+                  </pre>
+                )}
               </div>
             )}
-          </section>
-        </div>
-      </section>
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="block space-y-1">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+    <label className="block space-y-1.5">
+      <span className={labelClass}>{label}</span>
       {children}
     </label>
   )
 }
 
-function StatCard({ title, value, tone }: { title: string; value: string; tone: 'emerald' | 'rose' | 'amber' | 'blue' | 'violet' | 'slate' }) {
-  const tones: Record<string, string> = {
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    rose: 'bg-rose-50 text-rose-700 border-rose-200',
-    amber: 'bg-amber-50 text-amber-700 border-amber-200',
-    blue: 'bg-blue-50 text-blue-700 border-blue-200',
-    violet: 'bg-violet-50 text-violet-700 border-violet-200',
-    slate: 'bg-slate-100 text-slate-700 border-slate-200',
-  }
-
+function StatusChip({ label, ok, detail }: { label: string; ok: boolean; detail: string }) {
   return (
-    <div className={`rounded-2xl border p-4 ${tones[tone]}`}>
-      <p className="text-sm font-medium">{title}</p>
-      <p className="mt-2 text-2xl font-bold">{value}</p>
-    </div>
+    <span
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+        ok
+          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+          : 'border-rf-danger/30 bg-rf-danger/10 text-rf-danger'
+      }`}
+      title={detail}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${ok ? 'bg-emerald-400' : 'bg-rf-danger'}`} />
+      {label}
+      <span className="font-mono text-[10px] uppercase text-rf-muted">{ok ? 'ok' : 'fail'}</span>
+    </span>
   )
+}
+
+function TypeBadge({ type }: { type: RepoType }) {
+  const map: Record<RepoType, string> = {
+    rpm: 'text-rose-300 border-rose-500/30 bg-rose-500/10',
+    deb: 'text-sky-300 border-sky-500/30 bg-sky-500/10',
+    file: 'text-amber-300 border-amber-500/30 bg-amber-500/10',
+  }
+  return (
+    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${map[type]}`}>
+      {type}
+    </span>
+  )
+}
+
+function repoAccent(type: RepoType): string {
+  if (type === 'rpm') {
+    return 'border-l-4 border-l-rose-500/70'
+  }
+  if (type === 'deb') {
+    return 'border-l-4 border-l-sky-400/70'
+  }
+  return 'border-l-4 border-l-amber-400/70'
 }
 
 function formatBytes(size: number): string {

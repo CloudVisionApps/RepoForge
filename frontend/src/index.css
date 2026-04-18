@@ -1,15 +1,32 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-rf-void: #050507;
+  --color-rf-surface: #0c0c10;
+  --color-rf-elevated: #121218;
+  --color-rf-border: #23232b;
+  --color-rf-muted: #71717b;
+  --color-rf-fg: #e4e4e7;
+  --color-rf-accent: #2dd4bf;
+  --color-rf-accent-dim: #115e59;
+  --color-rf-warn: #f59e0b;
+  --color-rf-danger: #f43f5e;
+  --color-rf-ok: #4ade80;
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
 :root {
-  font-family: Inter, 'Segoe UI', sans-serif;
-  color: #0f172a;
-  background: #f8fafc;
+  color-scheme: dark;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  font-family: var(--font-sans);
+  background: var(--color-rf-void);
+  color: var(--color-rf-fg);
 }
 
 a {
@@ -26,4 +43,9 @@ textarea {
 pre {
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-rf-accent) 35%, transparent);
+  color: var(--color-rf-fg);
 }

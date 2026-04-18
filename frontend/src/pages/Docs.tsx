@@ -1,49 +1,79 @@
+const snippets = [
+  {
+    title: 'RPM / DNF',
+    body: 'Point baseurl at the rpms directory. Metadata is regenerated beside uploads.',
+    path: '/repo/rpm-demo/rpms',
+    code: `[repoforge]
+name=RepoForge
+baseurl=http://YOUR_HOST:8080/repo/rpm-demo/rpms
+enabled=1
+gpgcheck=0`,
+  },
+  {
+    title: 'DEB / APT',
+    body: 'Use the codename and component from the repository record.',
+    path: '/repo/deb-demo/dists/…',
+    code: `deb [trusted=yes] http://YOUR_HOST:8080/repo/deb-demo stable main`,
+  },
+  {
+    title: 'Static files',
+    body: 'Plain GET for tarballs, checksums, or release notes with optional subpaths.',
+    path: '/repo/files-demo/files/…',
+    code: `curl -fLO http://YOUR_HOST:8080/repo/files-demo/files/releases/app.tar.gz`,
+  },
+] as const
+
 export function Docs() {
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold">Repository usage</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          RepoForge publishes package and file content over plain HTTP. Use the examples below after uploading artifacts.
+    <div className="mx-auto max-w-6xl space-y-12 pb-12">
+      <header className="max-w-2xl border-b border-rf-border pb-10">
+        <p className="font-mono text-xs text-rf-accent">/repo/{'{slug}'}/…</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Client wiring</h1>
+        <p className="mt-3 text-sm leading-relaxed text-rf-muted">
+          RepoForge only serves HTTP trees. Swap host and slug; upload artifacts first so indexes and paths exist.
         </p>
-      </section>
+      </header>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <DocCard
-          title="RPM repositories"
-          body="Point DNF or YUM at the rpms path for your repository. createrepo_c metadata is generated beside the uploaded packages."
-          snippet={`[repoforge]\nname=RepoForge\nbaseurl=http://YOUR_HOST:8080/repo/rpm-demo/rpms\nenabled=1\ngpgcheck=0`}
-        />
-        <DocCard
-          title="DEB repositories"
-          body="APT clients should use the repository codename and component configured when the repo was created."
-          snippet={`deb [trusted=yes] http://YOUR_HOST:8080/repo/deb-demo stable main`}
-        />
-        <DocCard
-          title="File repositories"
-          body="Use file repositories for generic release artifacts, notes, or tarballs with optional folder paths."
-          snippet={`curl -O http://YOUR_HOST:8080/repo/files-demo/files/releases/app.tar.gz`}
-        />
-      </div>
+      <ol className="relative space-y-0 border-l border-rf-border pl-8">
+        {snippets.map((item, index) => (
+          <li key={item.title} className="relative pb-14 last:pb-0">
+            <span className="absolute -left-[9px] top-1.5 h-4 w-4 rounded-full border-2 border-rf-accent bg-rf-void" />
+            <span className="font-mono text-[10px] uppercase tracking-widest text-rf-muted">
+              Step {index + 1}
+            </span>
+            <h2 className="mt-1 text-xl font-semibold">{item.title}</h2>
+            <p className="mt-2 max-w-xl text-sm text-rf-muted">{item.body}</p>
+            <p className="mt-3 font-mono text-xs text-rf-accent/90">{item.path}</p>
+            <pre className="mt-4 overflow-x-auto rounded-xl border border-rf-border bg-rf-elevated p-5 font-mono text-xs leading-relaxed text-rf-fg/95 shadow-inner">
+              {item.code}
+            </pre>
+          </li>
+        ))}
+      </ol>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold">Notes</h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-700">
-          <li>Use the bearer token field in the header when the service has REPOFORGE_TOKEN enabled.</li>
-          <li>The tooling installer endpoint requires root privileges and explicit confirmation.</li>
-          <li>Uploads are sent using multipart form data with the file field named file.</li>
+      <section className="rounded-xl border border-rf-border bg-rf-elevated/60 p-6 sm:p-8">
+        <h2 className="text-lg font-semibold">Operational notes</h2>
+        <ul className="mt-4 space-y-3 text-sm text-rf-muted">
+          <li className="flex gap-3">
+            <span className="font-mono text-rf-accent">01</span>
+            <span>
+              When <span className="font-mono text-rf-fg/90">REPOFORGE_TOKEN</span> is set, every mutating and listing{' '}
+              <span className="font-mono text-rf-fg/90">/v1</span> call expects{' '}
+              <span className="font-mono text-rf-fg/90">Authorization: Bearer …</span>.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <span className="font-mono text-rf-accent">02</span>
+            <span>
+              The tooling installer requires root, a configured token, and explicit confirmation from the API.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <span className="font-mono text-rf-accent">03</span>
+            <span>Uploads are multipart with field name file; optional path for file repositories.</span>
+          </li>
         </ul>
       </section>
     </div>
-  )
-}
-
-function DocCard({ title, body, snippet }: { title: string; body: string; snippet: string }) {
-  return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <p className="mt-2 text-sm text-slate-600">{body}</p>
-      <pre className="mt-4 rounded-xl bg-slate-950 p-4 text-xs text-slate-100">{snippet}</pre>
-    </section>
   )
 }

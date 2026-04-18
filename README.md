@@ -4,7 +4,7 @@ Small Go service that stores uploaded artifacts on disk, tracks metadata in **SQ
 
 ## Version
 
-The current release is **0.3.0**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
+The current release is **0.4.0**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
 ## Requirements
 
@@ -143,7 +143,7 @@ gpgcheck=0
 On a machine with [FPM](https://github.com/jordansissel/fpm) and `rpm` installed:
 
 ```bash
-VERSION=0.3.0 ./packaging/build-packages.sh
+VERSION=0.4.0 ./packaging/build-packages.sh
 ```
 
 Artifacts appear under `packaging/out/`. The systemd unit is `repoforge.service`; state defaults to `/var/lib/repoforge` with optional overrides in `/etc/repoforge.env` (see `packaging/repoforge.service`).

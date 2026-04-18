@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.4.0] - 2026-04-18
+
+### Changed
+
+- **Web UI**: full visual redesign — dark theme and design tokens, sidebar shell with collapsible bearer token panel, Outfit + JetBrains Mono typography, reorganized dashboard (status chips, repo cards, forms), timeline-style client docs, responsive layout for narrow viewports.
+
 ## [0.3.0] - 2026-04-18
 
 ### Added
