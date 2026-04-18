@@ -1,0 +1,17 @@
+[Unit]
+Description=repo-forge (linuxhosting API)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=PORT=8080
+Environment=BASH_VHOST_UI=/usr/share/repo-forge/webui
+EnvironmentFile=-/etc/repo-forge.env
+ExecStart=/usr/bin/repo-forge serve --host 0.0.0.0 --port ${PORT} --db /var/lib/repo-forge/vhosts.db --webui-dir ${BASH_VHOST_UI}
+Restart=on-failure
+RestartSec=5
+WorkingDirectory=/var/lib/repo-forge
+
+[Install]
+WantedBy=multi-user.target
