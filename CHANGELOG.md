@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Packaging: FPM build script, systemd unit, and maintainer scripts aligned with `repoforge` (removed stale frontend / `repo-forge` / references).
+
 ### Removed
 
 ## [0.1.0] - 2026-04-18

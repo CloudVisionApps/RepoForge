@@ -1,0 +1,19 @@
+[Unit]
+Description=repoforge repository upload and mirror service
+Documentation=file:/usr/share/doc/repoforge/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=LISTEN=:8080
+Environment=DATA_DIR=/var/lib/repoforge/data
+Environment=DB_PATH=/var/lib/repoforge/repoforge.db
+EnvironmentFile=-/etc/repoforge.env
+ExecStart=/usr/bin/repoforge
+Restart=on-failure
+RestartSec=5
+WorkingDirectory=/var/lib/repoforge
+
+[Install]
+WantedBy=multi-user.target

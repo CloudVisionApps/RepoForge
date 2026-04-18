@@ -3,3 +3,5 @@ repoforge.db-*
 /data/
 *.test
 dist/
+packaging/staging/
+packaging/out/

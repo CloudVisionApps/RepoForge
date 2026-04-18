@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 # Build .deb and .rpm using FPM (https://github.com/jordansissel/fpm).
-# Requires: go, Node/npm, fpm (gem install fpm), rpmbuild (e.g. apt install rpm on Debian/Ubuntu).
-# CGO (sqlite): build architecture matches the host (use arm64 runners for GOARCH=arm64).
+# Requires: go, fpm (gem install fpm), rpmbuild (e.g. apt install rpm on Debian/Ubuntu).
+# Pure Go build (modernc.org/sqlite); set GOARCH for cross-compilation on a capable host.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STAGING="${ROOT}/packaging/staging"
 OUT="${ROOT}/packaging/out"
-PKG_NAME="repo-forge"
+PKG_NAME="repoforge"
 
 GOOS="${GOOS:-linux}"
 GOARCH="${GOARCH:-amd64}"
 MAINTAINER="${MAINTAINER:-}"
-DESCRIPTION="repo-forge: lightweight linux package manager"
+DESCRIPTION="repoforge: REST upload service with SQLite and APT/RPM repository layouts"
 URL="${URL:-}"
 
 if ! command -v fpm >/dev/null 2>&1; then
@@ -41,33 +41,18 @@ esac
 
 rm -rf "$STAGING"
 mkdir -p "$STAGING/usr/bin" "$STAGING/usr/lib/systemd/system" \
-	"$STAGING/usr/share/${PKG_NAME}/webui" "$STAGING/usr/share/doc/${PKG_NAME}" "$OUT"
-
-echo "Building frontend (Vite)..."
-(
-	cd "$ROOT/frontend"
-	npm ci
-	npm run build
-)
-
-echo "Embedding UI for Go build..."
-rm -rf "$ROOT/api/webui/dist"
-mkdir -p "$ROOT/api/webui/dist"
-cp -R "$ROOT/frontend/dist/." "$ROOT/api/webui/dist/"
+	"$STAGING/usr/share/doc/${PKG_NAME}" "$OUT"
 
 echo "Building ${GOOS}/${GOARCH} binary..."
 (
 	cd "$ROOT"
-	CGO_ENABLED=1 GOOS="$GOOS" GOARCH="$GOARCH" go build -buildvcs=false -trimpath -ldflags="-s -w" -o "$STAGING/usr/bin/${PKG_NAME}" .
+	CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" go build -buildvcs=false -trimpath -ldflags="-s -w" -o "$STAGING/usr/bin/${PKG_NAME}" ./cmd/repoforge
 )
 chmod 755 "$STAGING/usr/bin/${PKG_NAME}"
 
-cp -a "$ROOT/frontend/dist/." "$STAGING/usr/share/${PKG_NAME}/webui/"
-chmod -R a+rX "$STAGING/usr/share/${PKG_NAME}/webui"
-
 install -m 0644 "$ROOT/README.md" "$STAGING/usr/share/doc/${PKG_NAME}/README.md"
-install -m 0644 "$ROOT/API.md" "$STAGING/usr/share/doc/${PKG_NAME}/API.md"
-cp "${ROOT}/packaging/${PKG_NAME}.service" "$STAGING/usr/lib/systemd/system/${PKG_NAME}.service"
+install -m 0644 "$ROOT/CHANGELOG.md" "$STAGING/usr/share/doc/${PKG_NAME}/CHANGELOG.md"
+install -m 0644 "$ROOT/packaging/${PKG_NAME}.service" "$STAGING/usr/lib/systemd/system/${PKG_NAME}.service"
 
 FPM_BASE=(
 	-s dir

@@ -114,6 +114,16 @@ gpgcheck=0
 
 `createrepo_c` is usually available on Fedora/RHEL-like systems or via a Linux container. On macOS, run the service inside a small Linux container or install compatible tooling (for example via Homebrew if available) so RPM indexing succeeds.
 
+## Linux packages (.deb / .rpm)
+
+On a machine with [FPM](https://github.com/jordansissel/fpm) and `rpm` installed:
+
+```bash
+VERSION=0.1.0 ./packaging/build-packages.sh
+```
+
+Artifacts appear under `packaging/out/`. The systemd unit is `repoforge.service`; state defaults to `/var/lib/repoforge` with optional overrides in `/etc/repoforge.env` (see `packaging/repoforge.service`).
+
 ## Layout on disk
 
 Under `DATA_DIR/repos/{slug}/`:
