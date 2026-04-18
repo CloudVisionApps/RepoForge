@@ -40,6 +40,30 @@ Health:
 - `GET /healthz` — process up
 - `GET /readyz` — SQLite reachable
 
+## Install from GitHub (Linux)
+
+Published **`.deb`** and **`.rpm`** files attach to the [latest GitHub Release](https://github.com/CloudVisionApps/RepoForge/releases/latest) when a `v*` tag is built (see [`.github/workflows/package-release.yml`](.github/workflows/package-release.yml)).
+
+**One-liner** (needs `curl`, `python3`, and `sudo` unless you are already root; picks `.deb` on Debian/Ubuntu or `.rpm` on Fedora/RHEL-like systems, for **amd64** or **aarch64**):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CloudVisionApps/RepoForge/main/scripts/install-latest-linux.sh | sudo bash
+```
+
+Use another GitHub repo (fork or mirror) by setting **`REPOFORGE_GITHUB_REPO`** before running:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CloudVisionApps/RepoForge/main/scripts/install-latest-linux.sh | sudo env REPOFORGE_GITHUB_REPO=you/YourFork bash
+```
+
+The script lives in the repo as [`scripts/install-latest-linux.sh`](scripts/install-latest-linux.sh). Prefer downloading it, reviewing it, then executing:
+
+```bash
+curl -fsSL -o install-repoforge.sh https://raw.githubusercontent.com/CloudVisionApps/RepoForge/main/scripts/install-latest-linux.sh
+less install-repoforge.sh
+sudo bash install-repoforge.sh
+```
+
 ## REST API
 
 Create repositories:
