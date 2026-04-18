@@ -14,7 +14,7 @@ import (
 
 func (a *API) serveRepoFile(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	rel := strings.TrimPrefix(chi.URLParam(r, "path"), "/")
+	rel := strings.TrimPrefix(chi.URLParam(r, "*"), "/")
 	if rel == "" {
 		http.NotFound(w, r)
 		return

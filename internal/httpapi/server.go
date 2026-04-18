@@ -34,9 +34,11 @@ func New(cfg config.Config, store *db.Store, fs *storage.FS, indexers *repoindex
 		})
 	})
 	r.Route("/repo", func(r chi.Router) {
-		r.Get("/{slug}/{path:*}", a.serveRepoFile)
+		// Trailing "/*" is required: chi's "/{path:*}" matches only one segment, which breaks
+		// nested repo paths and /assets/... from the embedded Vite build.
+		r.Get("/{slug}/*", a.serveRepoFile)
 	})
-	r.Get("/{path:*}", a.serveWebUI)
+	r.Get("/*", a.serveWebUI)
 	return r
 }
 

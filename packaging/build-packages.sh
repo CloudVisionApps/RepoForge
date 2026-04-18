@@ -2,15 +2,34 @@
 # Build .deb and .rpm using FPM (https://github.com/jordansissel/fpm).
 # Requires: go, Node 20+, npm, fpm (gem install fpm), rpmbuild (e.g. apt install rpm on Debian/Ubuntu).
 # Pure Go build (modernc.org/sqlite); set GOARCH for cross-compilation on a capable host.
+# Packages always embed the Linux binary (GOOS must be linux).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STAGING="${ROOT}/packaging/staging"
 OUT="${ROOT}/packaging/out"
 PKG_NAME="repoforge"
+WEBUI_DIST="${ROOT}/internal/httpapi/webui/dist"
 
 GOOS="${GOOS:-linux}"
 GOARCH="${GOARCH:-amd64}"
+
+if [[ "$GOOS" != "linux" ]]; then
+	echo "error: FPM packages require GOOS=linux (got GOOS=$GOOS)" >&2
+	exit 1
+fi
+
+for cmd in go node npm; do
+	if ! command -v "$cmd" >/dev/null 2>&1; then
+		echo "error: required command not on PATH: $cmd" >&2
+		exit 1
+	fi
+done
+
+if ! command -v rpmbuild >/dev/null 2>&1; then
+	echo "error: rpmbuild not on PATH (Debian/Ubuntu: apt install rpm)" >&2
+	exit 1
+fi
 MAINTAINER="${MAINTAINER:-}"
 DESCRIPTION="repoforge: REST upload service with SQLite and APT/RPM repository layouts"
 URL="${URL:-}"
@@ -49,6 +68,15 @@ echo "Building web UI (Vite)..."
 	npm ci
 	npm run build
 )
+
+if [[ ! -f "${WEBUI_DIST}/index.html" ]]; then
+	echo "error: frontend build did not write ${WEBUI_DIST}/index.html" >&2
+	exit 1
+fi
+if ! compgen -G "${WEBUI_DIST}/assets/*.js" >/dev/null; then
+	echo "error: frontend build produced no ${WEBUI_DIST}/assets/*.js (embed would be broken)" >&2
+	exit 1
+fi
 
 echo "Building ${GOOS}/${GOARCH} binary..."
 (

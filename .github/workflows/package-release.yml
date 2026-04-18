@@ -51,6 +51,9 @@ jobs:
       - name: Install fpm
         run: sudo gem install --no-document fpm
 
+      - name: Go tests
+        run: go test ./...
+
       - name: Build FPM packages
         env:
           GOARCH: ${{ matrix.goarch }}

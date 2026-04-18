@@ -24,7 +24,7 @@ func (a *API) serveWebUI(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "web ui filesystem\n", http.StatusInternalServerError)
 		return
 	}
-	p := strings.Trim(strings.TrimPrefix(chi.URLParam(r, "path"), "/"), "/")
+	p := strings.Trim(strings.TrimPrefix(chi.URLParam(r, "*"), "/"), "/")
 	if strings.Contains(p, "..") {
 		http.NotFound(w, r)
 		return

@@ -15,6 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.4.1] - 2026-04-18
+
+### Changed
+
+- `packaging/build-packages.sh` requires `GOOS=linux`, checks for `go`/`node`/`npm`/`rpmbuild`, and verifies Vite output under `internal/httpapi/webui/dist/` before `go build` so packages are not built without embedded UI assets.
+- **Package Release** GitHub Actions workflow runs `go test ./...` before FPM package builds.
+
+### Fixed
+
+- HTTP router: use chi trailing `/*` wildcards for the embedded web UI and `/repo/{slug}/…` so multi-segment paths (for example `/assets/*.js` and pool paths) are not 404. The previous `/{path:*}` pattern only matched a single segment, which broke styles/scripts and deep repository files.
+
 ## [0.4.0] - 2026-04-18
 
 ### Changed
