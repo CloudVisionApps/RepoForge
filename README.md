@@ -1,4 +1,4 @@
-# repoforge
+# RepoForge
 
 Small Go service that stores uploaded artifacts on disk, tracks metadata in **SQLite**, exposes a **REST API** and a **web UI**, and rebuilds **APT** and **RPM** repository indexes so clients can consume repositories over plain HTTP.
 
