@@ -4,7 +4,7 @@ Small Go service that stores uploaded artifacts on disk, tracks metadata in **SQ
 
 ## Version
 
-The current release is **0.1.0**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
+The current release is **0.2.0**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
 
 ## Requirements
 
@@ -73,6 +73,23 @@ When `REPOFORGE_TOKEN` is set, add the header to mutating/listing `/v1` calls:
 curl -sS -H "Authorization: Bearer $REPOFORGE_TOKEN" localhost:8080/v1/repositories
 ```
 
+### Install host packages for RPM (and optional DEB tooling)
+
+`POST /v1/system/install-repo-tooling` runs the system package manager as **root** to install **createrepo_c** (and related RPM tooling) plus, on Debian-based systems, **dpkg-dev** for common `.deb` workflows. repoforge still builds APT indexes without `apt-ftparchive`; `dpkg-dev` is for tooling on the host.
+
+**Requirements:** `REPOFORGE_TOKEN` must be set (this endpoint is refused otherwise), the process must have **euid 0**, and the body must be `{"confirm": true}`.
+
+```bash
+sudo env REPOFORGE_TOKEN=your-secret ./repoforge   # or run the systemd unit as root
+
+curl -sS -X POST localhost:8080/v1/system/install-repo-tooling \
+  -H "Authorization: Bearer $REPOFORGE_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"confirm":true}'
+```
+
+Supported families are detected from `/etc/os-release`: Debian/Ubuntu (apt), Fedora/RHEL-like (dnf/yum), Arch, openSUSE/SLES (zypper). Unsupported distros or package-manager failures return an error JSON payload (typically HTTP 500) with details in the `log` field when available.
+
 ## Client-facing HTTP (static tree)
 
 Published files are served from:
@@ -119,7 +136,7 @@ gpgcheck=0
 On a machine with [FPM](https://github.com/jordansissel/fpm) and `rpm` installed:
 
 ```bash
-VERSION=0.1.0 ./packaging/build-packages.sh
+VERSION=0.2.0 ./packaging/build-packages.sh
 ```
 
 Artifacts appear under `packaging/out/`. The systemd unit is `repoforge.service`; state defaults to `/var/lib/repoforge` with optional overrides in `/etc/repoforge.env` (see `packaging/repoforge.service`).

@@ -30,6 +30,7 @@ func New(cfg config.Config, store *db.Store, fs *storage.FS, indexers *repoindex
 		r.Get("/repositories", a.listRepositories)
 		r.Get("/repositories/{slug}", a.getRepository)
 		r.Post("/repositories/{slug}/uploads", a.postUpload)
+		r.Post("/system/install-repo-tooling", a.postInstallRepoTooling)
 	})
 	return r
 }

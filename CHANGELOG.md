@@ -13,9 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Packaging: FPM build script, systemd unit, and maintainer scripts aligned with `repoforge` (removed stale frontend / `repo-forge` / references).
-
 ### Removed
+
+## [0.2.0] - 2026-04-18
+
+### Added
+
+- `POST /v1/system/install-repo-tooling` — privileged endpoint (requires `REPOFORGE_TOKEN`, root, and `{"confirm":true}`) to install distro packages for `createrepo_c` and related repo tooling (`internal/sysrepo`).
+
+### Fixed
+
+- Packaging: FPM build script, systemd unit, and maintainer scripts aligned with `repoforge` (removed stale frontend / `repo-forge` / references).
 
 ## [0.1.0] - 2026-04-18
 
