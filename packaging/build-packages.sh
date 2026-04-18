@@ -87,6 +87,9 @@ chmod 755 "$STAGING/usr/bin/${PKG_NAME}"
 
 install -m 0644 "$ROOT/README.md" "$STAGING/usr/share/doc/${PKG_NAME}/README.md"
 install -m 0644 "$ROOT/CHANGELOG.md" "$STAGING/usr/share/doc/${PKG_NAME}/CHANGELOG.md"
+install -m 0644 "$ROOT/docs/REST.md" "$STAGING/usr/share/doc/${PKG_NAME}/REST.md"
+install -m 0644 "$ROOT/docs/CONFIGURATION.md" "$STAGING/usr/share/doc/${PKG_NAME}/CONFIGURATION.md"
+install -m 0644 "$ROOT/docs/DEVELOPMENT.md" "$STAGING/usr/share/doc/${PKG_NAME}/DEVELOPMENT.md"
 install -m 0644 "$ROOT/packaging/${PKG_NAME}.service" "$STAGING/usr/lib/systemd/system/${PKG_NAME}.service"
 
 FPM_BASE=(

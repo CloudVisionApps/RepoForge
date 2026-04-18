@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Docs**: development, packaging-from-source, and configuration content moved from README to [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) and [docs/CONFIGURATION.md](docs/CONFIGURATION.md); packages ship these under `/usr/share/doc/repoforge/`.
+
 ### Fixed
 
 ### Removed

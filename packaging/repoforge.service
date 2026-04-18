@@ -1,6 +1,9 @@
 [Unit]
 Description=repoforge repository upload and mirror service
 Documentation=file:/usr/share/doc/repoforge/README.md
+Documentation=file:/usr/share/doc/repoforge/CONFIGURATION.md
+Documentation=file:/usr/share/doc/repoforge/DEVELOPMENT.md
+Documentation=file:/usr/share/doc/repoforge/REST.md
 After=network-online.target
 Wants=network-online.target
 
