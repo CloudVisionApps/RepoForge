@@ -2,6 +2,12 @@
 
 Small Go service that stores uploaded artifacts on disk, tracks metadata in **SQLite**, exposes a **REST API** and a **web UI**, and rebuilds **APT** and **RPM** repository indexes so clients can consume repositories over plain HTTP.
 
+## Screenshots
+
+Web dashboard (repositories, uploads, health, bearer token):
+
+![Repoforge web UI](screenshots/screenshot.png)
+
 ## Version
 
 The current release is **0.4.2**. See [CHANGELOG.md](CHANGELOG.md) for release history. This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventions.
