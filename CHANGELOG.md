@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **HTTP**: `GET /repo/{slug}/…/repodata/` (directory URL) now redirects to `repomd.xml` when that file exists, instead of always returning 404 for directories.
+
 ### Removed
 
 ## [0.4.2] - 2026-04-18

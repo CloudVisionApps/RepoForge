@@ -3,6 +3,7 @@ package httpapi
 import (
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -40,7 +41,14 @@ func (a *API) serveRepoFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	st, err := os.Stat(abs)
-	if err != nil || st.IsDir() {
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	if st.IsDir() {
+		if tryRedirectRepodataDir(w, r, abs) {
+			return
+		}
 		http.NotFound(w, r)
 		return
 	}
@@ -51,4 +59,27 @@ func (a *API) serveRepoFile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer f.Close()
 	http.ServeContent(w, r, filepath.Base(abs), st.ModTime(), f)
+}
+
+// tryRedirectRepodataDir sends browsers and mistaken directory URLs to repomd.xml.
+// DNF uses concrete files under repodata/; this handler otherwise returns 404 for directories.
+func tryRedirectRepodataDir(w http.ResponseWriter, r *http.Request, absDir string) bool {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		return false
+	}
+	if !strings.EqualFold(filepath.Base(absDir), "repodata") {
+		return false
+	}
+	repomd := filepath.Join(absDir, "repomd.xml")
+	st, err := os.Stat(repomd)
+	if err != nil || st.IsDir() {
+		return false
+	}
+	base := strings.TrimSuffix(r.URL.Path, "/")
+	loc := path.Clean(base + "/repomd.xml")
+	if r.URL.RawQuery != "" {
+		loc += "?" + r.URL.RawQuery
+	}
+	http.Redirect(w, r, loc, http.StatusFound)
+	return true
 }
