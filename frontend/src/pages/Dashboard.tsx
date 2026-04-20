@@ -42,6 +42,8 @@ export function Dashboard() {
   const [form, setForm] = useState<RepoFormState>(defaultForm)
   const [creating, setCreating] = useState(false)
   const [uploadingSlug, setUploadingSlug] = useState<string | null>(null)
+  const [deletingRepoSlug, setDeletingRepoSlug] = useState<string | null>(null)
+  const [deletingArtifactID, setDeletingArtifactID] = useState<number | null>(null)
   const [installing, setInstalling] = useState(false)
   const [toolingResult, setToolingResult] = useState<ToolingInstallResponse | null>(null)
   const [pathByRepo, setPathByRepo] = useState<Record<string, string>>({})
@@ -178,6 +180,46 @@ export function Dashboard() {
     }
   }
 
+  const handleDeleteRepository = async (repo: Repository) => {
+    const approved = window.confirm(`Delete repository "${repo.name}" and all uploaded artifacts?`)
+    if (!approved) {
+      return
+    }
+    setDeletingRepoSlug(repo.slug)
+    try {
+      await api.deleteRepository(repo.slug)
+      setRepositories((current) => current.filter((item) => item.slug !== repo.slug))
+      setArtifactsByRepo((current) => {
+        const next = { ...current }
+        delete next[repo.slug]
+        return next
+      })
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Delete repository failed')
+    } finally {
+      setDeletingRepoSlug(null)
+    }
+  }
+
+  const handleDeleteArtifact = async (repo: Repository, artifact: Artifact) => {
+    const approved = window.confirm(`Delete uploaded file "${artifact.logical_path}"?`)
+    if (!approved) {
+      return
+    }
+    setDeletingArtifactID(artifact.id)
+    try {
+      await api.deleteArtifact(repo.slug, artifact.id)
+      setArtifactsByRepo((current) => ({
+        ...current,
+        [repo.slug]: (current[repo.slug] ?? []).filter((item) => item.id !== artifact.id),
+      }))
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Delete artifact failed')
+    } finally {
+      setDeletingArtifactID(null)
+    }
+  }
+
   const publicIndexUrl = (repo: Repository, artifacts: Artifact[]): string => {
     const base = api.repoBaseUrl(repo)
     if (repo.type === 'rpm') {
@@ -271,14 +313,24 @@ export function Dashboard() {
                           created {new Date(repo.created_at).toLocaleString()}
                         </p>
                       </div>
-                      <a
-                        href={publicIndexUrl(repo, artifacts)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="shrink-0 rounded-md border border-rf-border px-3 py-1.5 text-xs font-medium text-rf-accent hover:bg-rf-surface"
-                      >
-                        Open index URL
-                      </a>
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        <a
+                          href={publicIndexUrl(repo, artifacts)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-md border border-rf-border px-3 py-1.5 text-xs font-medium text-rf-accent hover:bg-rf-surface"
+                        >
+                          Open index URL
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => void handleDeleteRepository(repo)}
+                          disabled={deletingRepoSlug === repo.slug}
+                          className="rounded-md border border-rf-danger/50 px-3 py-1.5 text-xs font-medium text-rf-danger hover:bg-rf-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {deletingRepoSlug === repo.slug ? 'Deleting…' : 'Delete repo'}
+                        </button>
+                      </div>
                     </div>
 
                     {repo.type === 'deb' && (
@@ -329,6 +381,25 @@ export function Dashboard() {
                       </button>
                     </form>
 
+                    <div className="grid gap-3 border-b border-rf-border/80 bg-rf-surface/30 p-5 lg:grid-cols-2">
+                      <label className={`block space-y-1.5 ${labelClass}`}>
+                        <span>Upload API URL</span>
+                        <input
+                          readOnly
+                          value={api.repoInstallHints(repo).upload_url}
+                          className={`${inputClass} font-mono text-xs`}
+                        />
+                      </label>
+                      <label className={`block space-y-1.5 ${labelClass}`}>
+                        <span>Linux install script URL</span>
+                        <input
+                          readOnly
+                          value={api.repoInstallHints(repo).script_url}
+                          className={`${inputClass} font-mono text-xs`}
+                        />
+                      </label>
+                    </div>
+
                     <div className="p-5">
                       <p className={`${labelClass} mb-3`}>Recent artifacts</p>
                       {artifacts.length === 0 ? (
@@ -346,14 +417,24 @@ export function Dashboard() {
                                   {formatBytes(artifact.size)} · {new Date(artifact.created_at).toLocaleString()}
                                 </p>
                               </div>
-                              <a
-                                href={`${api.repoBaseUrl(repo)}/${artifact.logical_path}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="shrink-0 text-xs font-medium text-rf-accent hover:underline"
-                              >
-                                GET
-                              </a>
+                              <div className="flex shrink-0 items-center gap-3">
+                                <a
+                                  href={`${api.repoBaseUrl(repo)}/${artifact.logical_path}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-xs font-medium text-rf-accent hover:underline"
+                                >
+                                  GET
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => void handleDeleteArtifact(repo, artifact)}
+                                  disabled={deletingArtifactID === artifact.id}
+                                  className="text-xs font-medium text-rf-danger hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  {deletingArtifactID === artifact.id ? 'Deleting…' : 'Delete'}
+                                </button>
+                              </div>
                             </li>
                           ))}
                         </ul>

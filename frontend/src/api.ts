@@ -4,6 +4,7 @@ import type {
   HealthState,
   Repository,
   RepositoryListResponse,
+  RepoInstallHints,
   ToolingInstallResponse,
   UploadResponse,
 } from './types'
@@ -112,7 +113,26 @@ export const api = {
     }).then(handleResponse<ToolingInstallResponse>)
   },
 
+  deleteRepository(slug: string): Promise<void> {
+    return apiFetch(`/v1/repositories/${encodeURIComponent(slug)}`, {
+      method: 'DELETE',
+    }).then(() => undefined)
+  },
+
+  deleteArtifact(slug: string, artifactID: number): Promise<void> {
+    return apiFetch(`/v1/repositories/${encodeURIComponent(slug)}/artifacts/${artifactID}`, {
+      method: 'DELETE',
+    }).then(() => undefined)
+  },
+
   repoBaseUrl(repo: Repository): string {
     return `${window.location.origin}/repo/${repo.slug}`
+  },
+
+  repoInstallHints(repo: Repository): RepoInstallHints {
+    return {
+      script_url: `${window.location.origin}/repo/${repo.slug}/install.sh`,
+      upload_url: `${window.location.origin}/v1/repositories/${repo.slug}/uploads`,
+    }
   },
 }

@@ -36,6 +36,28 @@ curl -sS -X POST localhost:8080/v1/repositories/deb-demo/uploads -F 'file=@./exa
 curl -sS -X POST localhost:8080/v1/repositories/files-demo/uploads -F 'file=@./notes.txt' -F 'path=notes/release-notes.txt'
 ```
 
+Upload endpoint pattern for tooling/UI:
+
+```text
+/v1/repositories/{slug}/uploads
+```
+
+## Delete artifact / repository
+
+```bash
+curl -sS -X DELETE localhost:8080/v1/repositories/rpm-demo/artifacts/1
+curl -sS -X DELETE localhost:8080/v1/repositories/rpm-demo
+```
+
+## Repo install script (Linux clients)
+
+Each `rpm`/`deb` repository exposes a shell script that configures the client package manager:
+
+```bash
+curl -fsSL localhost:8080/repo/rpm-demo/install.sh | sudo bash
+curl -fsSL localhost:8080/repo/deb-demo/install.sh | sudo bash
+```
+
 ## Bearer token
 
 When **`REPOFORGE_TOKEN`** is set, send it on mutating and listing **`/v1`** calls:

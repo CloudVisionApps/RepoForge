@@ -13,9 +13,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Tests**: `static_test.go` no longer uses `testing.T.Context()` (Go 1.21+) so CI on older toolchains compiles.
-
 ### Removed
+
+## [0.5.0] - 2026-04-20
+
+### Added
+
+- **Repository management**: `DELETE /v1/repositories/{slug}` plus web UI action to remove repositories.
+- **Artifact management**: `DELETE /v1/repositories/{slug}/artifacts/{artifactID}` plus web UI action to delete uploaded RPM/DEB/file artifacts.
+- **Client setup**: `GET /repo/{slug}/install.sh` for RPM/DEB repositories to configure Linux package-manager sources quickly.
+- **Web UI**: per-repository read-only URLs for direct upload endpoint and Linux install script endpoint.
+
+### Fixed
+
+- **Tests**: `static_test.go` no longer uses `testing.T.Context()` (Go 1.21+) so CI on older toolchains compiles.
 
 ## [0.4.3] - 2026-04-18
 

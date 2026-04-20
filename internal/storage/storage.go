@@ -68,6 +68,10 @@ func (f *FS) RenameInto(destAbs string, tmpPath string) error {
 	return nil
 }
 
+func (f *FS) RemoveRepo(slug string) error {
+	return os.RemoveAll(f.RepoRoot(slug))
+}
+
 func SafeLogicalPath(p string) (string, error) {
 	p = filepath.ToSlash(strings.TrimSpace(p))
 	if p == "" || p == "." {

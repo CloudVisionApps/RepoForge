@@ -2,12 +2,14 @@ package httpapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -143,6 +145,31 @@ func (a *API) listArtifacts(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"artifacts": out})
 }
 
+func (a *API) deleteRepository(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	if _, err := a.store.GetRepositoryBySlug(r.Context(), slug); err != nil {
+		if err == db.ErrNotFound {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, `{"error":"database"}`, http.StatusInternalServerError)
+		return
+	}
+	if err := a.store.DeleteRepositoryBySlug(r.Context(), slug); err != nil {
+		if err == db.ErrNotFound {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, `{"error":"database"}`, http.StatusInternalServerError)
+		return
+	}
+	if err := a.fs.RemoveRepo(slug); err != nil {
+		http.Error(w, `{"error":"storage cleanup failed"}`, http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (a *API) postUpload(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	repo, err := a.store.GetRepositoryBySlug(r.Context(), slug)
@@ -226,6 +253,71 @@ func (a *API) postUpload(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"artifact": artifactJSON(art)})
 }
 
+func (a *API) deleteArtifact(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	repo, err := a.store.GetRepositoryBySlug(r.Context(), slug)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, `{"error":"database"}`, http.StatusInternalServerError)
+		return
+	}
+	artifactID, err := strconv.ParseInt(chi.URLParam(r, "artifactID"), 10, 64)
+	if err != nil || artifactID <= 0 {
+		http.Error(w, `{"error":"invalid artifact id"}`, http.StatusBadRequest)
+		return
+	}
+	art, err := a.store.GetArtifactByIDAndRepositorySlug(r.Context(), slug, artifactID)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, `{"error":"database"}`, http.StatusInternalServerError)
+		return
+	}
+
+	root := filepath.Clean(a.fs.RepoRoot(slug))
+	abs := filepath.Join(root, filepath.FromSlash(art.LogicalPath))
+	abs = filepath.Clean(abs)
+	if abs != root && !strings.HasPrefix(abs, root+string(os.PathSeparator)) {
+		http.Error(w, `{"error":"invalid artifact path"}`, http.StatusInternalServerError)
+		return
+	}
+	if err := os.Remove(abs); err != nil && !os.IsNotExist(err) {
+		http.Error(w, `{"error":"artifact file delete failed"}`, http.StatusInternalServerError)
+		return
+	}
+	if err := a.store.DeleteArtifactByID(r.Context(), artifactID); err != nil {
+		if err == db.ErrNotFound {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, `{"error":"database"}`, http.StatusInternalServerError)
+		return
+	}
+
+	runID, _ := a.store.StartIndexRun(r.Context(), repo.ID)
+	idxErr := a.indexers.Reindex(r.Context(), repo, a.fs.RepoRoot(repo.Slug))
+	if runID != 0 {
+		if idxErr != nil {
+			_ = a.store.FinishIndexRun(r.Context(), runID, false, idxErr.Error())
+		} else {
+			_ = a.store.FinishIndexRun(r.Context(), runID, true, "")
+		}
+	}
+	if idxErr != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]any{
+			"error":  "index failed",
+			"detail": idxErr.Error(),
+		})
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (a *API) resolveUploadPaths(repo db.Repository, tmpPath, baseName, pathOverride string) (logicalPath string, destAbs string, err error) {
 	root := a.fs.RepoRoot(repo.Slug)
 	switch repo.Type {
@@ -265,3 +357,92 @@ type invalidErr string
 func (s invalidErr) Error() string { return string(s) }
 
 func errInvalid(msg string) error { return invalidErr(msg) }
+
+func (a *API) installRepoScript(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	repo, err := a.store.GetRepositoryBySlug(r.Context(), slug)
+	if err != nil {
+		if err == db.ErrNotFound {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, `{"error":"database"}`, http.StatusInternalServerError)
+		return
+	}
+	if repo.Type == db.RepoFile {
+		http.Error(w, "install script is not available for file repositories\n", http.StatusBadRequest)
+		return
+	}
+	baseURL := "http://" + r.Host
+	if r.TLS != nil {
+		baseURL = "https://" + r.Host
+	}
+	body := installScriptForRepo(repo, baseURL)
+	w.Header().Set("Content-Type", "text/x-shellscript; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	_, _ = w.Write([]byte(body))
+}
+
+func installScriptForRepo(repo db.Repository, baseURL string) string {
+	repoName := repo.Name
+	if repoName == "" {
+		repoName = repo.Slug
+	}
+	switch repo.Type {
+	case db.RepoDeb:
+		cfg, _ := db.ParseDebConfig(repo.ConfigJSON)
+		return fmt.Sprintf(`#!/usr/bin/env bash
+set -euo pipefail
+if ! command -v apt-get >/dev/null 2>&1; then
+  echo "apt-get not found; this script supports Debian/Ubuntu systems." >&2
+  exit 1
+fi
+if [[ "$(id -u)" -ne 0 ]]; then
+  SUDO="sudo"
+else
+  SUDO=""
+fi
+BASE_URL=%q
+SLUG=%q
+CODENAME=%q
+COMPONENT=%q
+LIST_FILE="/etc/apt/sources.list.d/repoforge-${SLUG}.list"
+echo "deb [trusted=yes] ${BASE_URL}/repo/${SLUG} ${CODENAME} ${COMPONENT}" | ${SUDO} tee "${LIST_FILE}" >/dev/null
+${SUDO} apt-get update
+echo "Configured APT source in ${LIST_FILE}"
+`, baseURL, repo.Slug, cfg.Codename, cfg.Component)
+	case db.RepoRpm:
+		return fmt.Sprintf(`#!/usr/bin/env bash
+set -euo pipefail
+if ! command -v dnf >/dev/null 2>&1 && ! command -v yum >/dev/null 2>&1; then
+  echo "dnf/yum not found; this script supports RPM-based systems." >&2
+  exit 1
+fi
+if [[ "$(id -u)" -ne 0 ]]; then
+  SUDO="sudo"
+else
+  SUDO=""
+fi
+BASE_URL=%q
+SLUG=%q
+REPO_FILE="/etc/yum.repos.d/repoforge-${SLUG}.repo"
+cat <<EOF | ${SUDO} tee "${REPO_FILE}" >/dev/null
+[repoforge-${SLUG}]
+name=%s
+baseurl=${BASE_URL}/repo/${SLUG}/rpms
+enabled=1
+gpgcheck=0
+EOF
+if command -v dnf >/dev/null 2>&1; then
+  ${SUDO} dnf clean all
+  ${SUDO} dnf makecache
+else
+  ${SUDO} yum clean all
+  ${SUDO} yum makecache
+fi
+echo "Configured RPM repository in ${REPO_FILE}"
+`, baseURL, repo.Slug, repoName)
+	default:
+		return "#!/usr/bin/env bash\nexit 1\n"
+	}
+}

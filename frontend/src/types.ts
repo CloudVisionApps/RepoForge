@@ -62,3 +62,8 @@ export interface HealthState {
   ok: boolean
   message: string
 }
+
+export interface RepoInstallHints {
+  script_url: string
+  upload_url: string
+}

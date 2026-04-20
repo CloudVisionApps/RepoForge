@@ -133,6 +133,53 @@ func (s *Store) CreateArtifact(ctx context.Context, repoID int64, logicalPath, s
 	return a, nil
 }
 
+func (s *Store) GetArtifactByIDAndRepositorySlug(ctx context.Context, slug string, artifactID int64) (Artifact, error) {
+	row := s.db.QueryRowContext(ctx, `
+		SELECT a.id, a.repository_id, a.logical_path, a.sha256, a.size, a.content_type, a.created_at
+		FROM artifacts a
+		INNER JOIN repositories r ON r.id = a.repository_id
+		WHERE r.slug = ? AND a.id = ?
+	`, slug, artifactID)
+	var a Artifact
+	if err := row.Scan(&a.ID, &a.RepositoryID, &a.LogicalPath, &a.SHA256, &a.Size, &a.ContentType, &a.CreatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Artifact{}, ErrNotFound
+		}
+		return Artifact{}, err
+	}
+	return a, nil
+}
+
+func (s *Store) DeleteArtifactByID(ctx context.Context, artifactID int64) error {
+	res, err := s.db.ExecContext(ctx, `DELETE FROM artifacts WHERE id = ?`, artifactID)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *Store) DeleteRepositoryBySlug(ctx context.Context, slug string) error {
+	res, err := s.db.ExecContext(ctx, `DELETE FROM repositories WHERE slug = ?`, slug)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (s *Store) StartIndexRun(ctx context.Context, repoID int64) (int64, error) {
 	res, err := s.db.ExecContext(ctx,
 		`INSERT INTO index_runs (repository_id, started_at, status) VALUES (?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), 'running')`,
