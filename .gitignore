@@ -9,3 +9,5 @@ packaging/staging/
 packaging/out/
 /repoforge-*.rpm
 /repoforge-*.deb
+/internal/httpapi/webui
+/internal/httpapi/webui/dist
